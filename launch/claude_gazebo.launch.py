@@ -44,42 +44,42 @@ def generate_launch_description():
     )
 
     # ---------- OpenManipulator-X (namespace: open_manipulator) ----------
-    om_ns = "open_manipulator"
-    om_xacro = os.path.join(pkg_simworld, "urdf", "open_manipulator_x.urdf.xacro")
-    om_description = Command(["xacro ", om_xacro, " use_sim:=true"])
+    om01_namespace = "open_manipulator"
+    om01_xacro = os.path.join(pkg_simworld, "urdf", "open_manipulator_x.urdf.xacro")
+    om01_description = Command(["xacro ", om01_xacro, " use_sim:=true"])
 
-    om_rsp = Node(
+    om01_rsp = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
-        namespace=om_ns,
+        namespace=om01_namespace,
         output="screen",
         parameters=[{
             "use_sim_time": use_sim_time,
-            "robot_description": om_description,
-            "frame_prefix": om_ns + "/",
+            "robot_description": om01_description,
+            "frame_prefix": om01_namespace + "/",
         }],
     )
 
-    om_spawn = Node(
+    om01_spawn = Node(
         package="ros_gz_sim",
         executable="create",
         output="screen",
         arguments=[
             "-topic", "/open_manipulator/robot_description",
-            "-name", om_ns,
+            "-name", om01_namespace,
             "-z", "0.0",
         ],
     )
 
     # Spawn controllers only after the entity is created
-    om_cm = "/open_manipulator/controller_manager"
-    om_controllers = [
+    om01_controlmanager = "/open_manipulator/controller_manager"
+    om01_controllers = [
         Node(package="controller_manager", executable="spawner", output="screen",
-             arguments=[c, "--controller-manager", om_cm])
+             arguments=[c, "--controller-manager", om01_controlmanager])
         for c in ["joint_state_broadcaster", "arm_controller", "gripper_controller"]
     ]
     om_load_controllers = RegisterEventHandler(
-        OnProcessExit(target_action=om_spawn, on_exit=om_controllers)
+        OnProcessExit(target_action=om01_spawn, on_exit=om01_controllers)
     )
 
     return LaunchDescription([
@@ -87,7 +87,7 @@ def generate_launch_description():
         set_resource_path,
         gz_sim,
         clock_bridge,
-        om_rsp,
-        om_spawn,
+        om01_rsp,
+        om01_spawn,
         om_load_controllers,
     ])
