@@ -19,7 +19,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time")
     pkg_ros_gz_sim = get_package_share_directory("ros_gz_sim")
     pkg_om_desc = get_package_share_directory("open_manipulator_description")
-    pkg_rens = get_package_share_directory("myros2_sim_world")
+    pkg_simworld = get_package_share_directory("myros2_sim_world")
 
     # Make model:// mesh URIs resolvable by Gazebo
     set_resource_path = AppendEnvironmentVariable(
@@ -45,7 +45,7 @@ def generate_launch_description():
 
     # ---------- OpenManipulator-X (namespace: open_manipulator) ----------
     om_ns = "open_manipulator"
-    om_xacro = os.path.join(pkg_rens, "urdf", "open_manipulator_x.urdf.xacro")
+    om_xacro = os.path.join(pkg_simworld, "urdf", "open_manipulator_x.urdf.xacro")
     om_description = Command(["xacro ", om_xacro, " use_sim:=true"])
 
     om_rsp = Node(
