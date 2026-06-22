@@ -67,6 +67,8 @@ def generate_launch_description():
         arguments=[
             "-topic", "/open_manipulator/robot_description",
             "-name", om01_namespace,
+            "-x", "1.0",
+            "-y", "2.0",
             "-z", "0.0",
         ],
     )
