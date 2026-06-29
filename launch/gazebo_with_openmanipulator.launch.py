@@ -58,6 +58,10 @@ def generate_launch_description():
             "robot_description": om01_description,
             "frame_prefix": om01_namespace + "/",
         }],
+        remappings=[
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static'),
+        ],
     )
 
     om01_spawn = Node(

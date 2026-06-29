@@ -23,7 +23,6 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     use_sim_time = True
-    robot_namespace = str("/rens01")
 
     ekf_config_path = PathJoinSubstitution(
         [FindPackageShare("linorobot2_base"), "config", "ekf.yaml"]
@@ -45,6 +44,12 @@ def generate_launch_description():
     )
 
     return LaunchDescription([    
+        DeclareLaunchArgument(
+            name='namespace', 
+            default_value='',
+            description='namespace'
+        ),
+        
         DeclareLaunchArgument(
             name='urdf', 
             default_value=urdf_path,
@@ -81,19 +86,13 @@ def generate_launch_description():
             description='Robot spawn heading'
         ),
 
-        DeclareLaunchArgument(
-            name='namespace', 
-            default_value='rens01',
-            description='Robot spawn heading'
-        ),
-
         Node(
             package='ros_gz_sim',
             executable='create',
             output='screen',
-            namespace=robot_namespace,
+            namespace=LaunchConfiguration('namespace'),
             arguments=[
-                '-topic', robot_namespace + '/' + 'robot_description', 
+                '-topic',  [ LaunchConfiguration('namespace'), '/' , 'robot_description'], 
                 '-entity', 'linorobot2', 
                 '-x', LaunchConfiguration('spawn_x'),
                 '-y', LaunchConfiguration('spawn_y'),
@@ -105,19 +104,19 @@ def generate_launch_description():
         Node(
             package="ros_gz_bridge",
             executable="parameter_bridge",
-            namespace=robot_namespace,
+            namespace=LaunchConfiguration('namespace'),
             arguments=[
-                "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
-                "/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist",
-                "/odom/unfiltered@nav_msgs/msg/Odometry[gz.msgs.Odometry",
-                "/imu/data@sensor_msgs/msg/Imu[gz.msgs.IMU",
-                "/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model",
-                "/scan_unfiltered@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
-                # "/scan_gz@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
-                "/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
-                "/camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
-                "/camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image",
-                "/camera/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked",
+                [ LaunchConfiguration('namespace'),"/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"],
+                [ LaunchConfiguration('namespace'),"/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist"],
+                [ LaunchConfiguration('namespace'),"/odom/unfiltered@nav_msgs/msg/Odometry[gz.msgs.Odometry"],
+                [ LaunchConfiguration('namespace'),"/imu/data@sensor_msgs/msg/Imu[gz.msgs.IMU"],
+                [ LaunchConfiguration('namespace'),"/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model"],
+                [ LaunchConfiguration('namespace'),"/scan_unfiltered@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan"],
+                # [ LaunchConfiguration('namespace'),"/scan_gz@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan"],
+                [ LaunchConfiguration('namespace'),"/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo"],
+                [ LaunchConfiguration('namespace'),"/camera/image@sensor_msgs/msg/Image[gz.msgs.Image"],
+                [ LaunchConfiguration('namespace'),"/camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image"],
+                [ LaunchConfiguration('namespace'),"/camera/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked"],
             ],
             remappings=[
                 ('/camera/camera_info', '/camera/color/camera_info'),
@@ -130,7 +129,7 @@ def generate_launch_description():
         Node(
             package='laser_filters',
             executable='scan_to_scan_filter_chain',
-            namespace=robot_namespace,
+            namespace=LaunchConfiguration('namespace'),
             output='screen',
             parameters=[lidar_filter_file],
             # Remap input from '/scan_unfiltered' to '/scan' and output from '/scan_filtered' to '/scan'
@@ -143,21 +142,25 @@ def generate_launch_description():
         Node(
             package='linorobot2_gazebo',
             executable='command_timeout',
-            namespace=robot_namespace,
+            namespace=LaunchConfiguration('namespace'),
             name='command_timeout'
         ),
 
         Node(
             package='robot_localization',
             executable='ekf_node',
-            namespace=robot_namespace,
+            namespace=LaunchConfiguration('namespace'),
             name='ekf_filter_node',
             output='screen',
             parameters=[
                 {'use_sim_time': use_sim_time}, 
                 ekf_config_path
             ],
-            remappings=[("odometry/filtered", LaunchConfiguration("odom_topic"))]
+            remappings=[
+                ([ LaunchConfiguration('namespace'),"odometry/filtered" ], LaunchConfiguration("odom_topic")),
+                ([ LaunchConfiguration('namespace'),"/tf" ], "tf"),
+                ([ LaunchConfiguration('namespace'),"/tf_static" ], "tf_static"),
+                ]
         ),
 
         IncludeLaunchDescription(
@@ -165,7 +168,8 @@ def generate_launch_description():
             launch_arguments={
                 'use_sim_time': str(use_sim_time),
                 'publish_joints': 'false',
-                'urdf': LaunchConfiguration('urdf')
+                'urdf': LaunchConfiguration('urdf'),
+                'namespace': LaunchConfiguration('namespace'),
             }.items()
         )
     ])
