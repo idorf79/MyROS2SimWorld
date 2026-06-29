@@ -22,4 +22,7 @@ ros2 launch myros2_sim_world rens_in_gazebo.launch.py robot_name:=rens01 namespa
 ros2 launch myros2_sim_world rens_in_gazebo.launch.py robot_name:=rens02 namespace:=/rens02 spawn_y:=-2.0
 ```
 
-You can add more robots, but make sure to spawn them using different 'spawn_x', 'spawn_y' and/or 'spawn_z' arguments
+You can add more robots, but make sure to spawn them using different 'spawn_x', 'spawn_y' and/or 'spawn_z' arguments.
+
+IMPORTANT: currently Gazebo crashes when you want to run more than 1 REnS!
+This is a known issue.
